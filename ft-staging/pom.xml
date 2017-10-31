@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>RestDemo</artifactId>
+        <groupId>com.consulner.springboot.rest</groupId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>com.consulner.springboot.rest.ft-staging</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+
+    <properties>
+        <jacoco.plugin.version>0.7.8</jacoco.plugin.version>
+    </properties>
+
+    <!-- dependencies from tested project are needed for jacoco report generation: sources and classes -->
+    <dependencies>
+        <dependency>
+            <groupId>com.consulner.springboot.rest</groupId>
+            <artifactId>com.consulner.springboot.rest.app</artifactId>
+            <version>${project.version}</version>
+            <classifier>classes</classifier>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.consulner.springboot.rest</groupId>
+            <artifactId>com.consulner.springboot.rest.app</artifactId>
+            <version>${project.version}</version>
+            <classifier>sources</classifier>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.consulner.springboot.rest</groupId>
+            <artifactId>com.consulner.springboot.rest.api</artifactId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.consulner.springboot.rest</groupId>
+            <artifactId>com.consulner.springboot.rest.api</artifactId>
+            <version>${project.version}</version>
+            <classifier>sources</classifier>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>prepare-covered-classes</id>
+                        <goals>
+                            <goal>unpack-dependencies</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <excludeClassifiers>sources</excludeClassifiers>
+                            <outputDirectory>${project.build.directory}/covered-classes</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>prepare-covered-sources</id>
+                        <goals>
+                            <goal>unpack-dependencies</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <includeClassifiers>sources</includeClassifiers>
+                            <outputDirectory>${project.build.directory}/covered-sources</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+                <configuration>
+                    <includeGroupIds>com.consulner.springboot.rest</includeGroupIds>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <!-- <id>default-cli</id> -->
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <tasks>
+                                <echo message="Generating HTML coverage report.."/>
+                                <taskdef name="report" classname="org.jacoco.ant.ReportTask"
+                                         classpathref="maven.plugin.classpath"/>
+                                <report>
+                                    <executiondata>
+                                        <file file="${project.build.directory}/jacoco.exec">
+                                        </file>
+                                    </executiondata>
+                                    <structure name="Integration test coverage">
+                                        <classfiles>
+                                            <fileset dir="${project.build.directory}/covered-classes">
+                                            </fileset>
+                                        </classfiles>
+                                        <sourcefiles encoding="UTF-8">
+                                            <fileset dir="${project.build.directory}/covered-sources">
+                                            </fileset>
+                                        </sourcefiles>
+                                    </structure>
+                                    <html destdir="${basedir}/target/coverage-report/html"/>
+                                    <xml destfile="${basedir}/target/coverage-report/coverage-report.xml"/>
+                                    <csv destfile="${basedir}/target/coverage-report/coverage-report.csv"/>
+                                </report>
+                            </tasks>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>org.jacoco.ant</artifactId>
+                        <version>${jacoco.plugin.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.19.1</version>
+                <configuration>
+                    <includes>
+                        <include>**/*FT.java</include>
+                    </includes>
+                    <excludes>
+                        <exclude>**/Tests*.java</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.plugin.version}</version>
+                <configuration>
+                    <address>172.17.0.1</address>
+                    <destFile>${project.build.directory}/jacoco.exec</destFile>
+                    <port>10001</port>
+                    <reset>true</reset>
+                    <append>true</append>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>dump</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
